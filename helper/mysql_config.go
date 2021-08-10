@@ -23,6 +23,13 @@ type DBConfig struct {
 	opts            []gorm.Option
 }
 
+type Pool struct {
+	MaxIdle     int
+	MaxOpen     int
+	MaxLifetime time.Duration
+	MaxIdleTime time.Duration
+}
+
 func NewConfig() *DBConfig {
 	return &DBConfig{
 		username:        "root",
@@ -87,6 +94,16 @@ func (cfg *DBConfig) Charset(val string) *DBConfig {
 	cfg.parameters["charset"] = val
 	return cfg
 }
+
+func (cfg *DBConfig) Pool(pool Pool) *DBConfig {
+	cfg.maxIdleConn = pool.MaxIdle
+	cfg.maxOpenConn = pool.MaxOpen
+	cfg.connMaxLifetime = pool.MaxLifetime
+	cfg.connMaxIdleTime = pool.MaxIdleTime
+
+	return cfg
+}
+
 func (cfg *DBConfig) buildParameters() string {
 	query := url.Values{}
 	for k, v := range cfg.parameters {
