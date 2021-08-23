@@ -40,7 +40,7 @@ func Page(db *gorm.DB, page, size int, cause criteria.Cause, target interface{})
 	if err != nil {
 		return
 	}
-	err = db.Scopes(cause.(scope).QueryAndOrder()).
+	err = db.Scopes(cause.(scope).Order()).
 		Offset(page * size).Limit(size).
 		Find(target).
 		Error

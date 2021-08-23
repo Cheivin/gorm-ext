@@ -13,6 +13,16 @@ func (c *cause) Query() func(db *gorm.DB) *gorm.DB {
 	return c.query()
 }
 
+func (c *cause) Order() func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		_, _, order := c.build()
+		if order != "" {
+			db.Order(order)
+		}
+		return db
+	}
+}
+
 func (c *cause) QueryAndOrder() func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		query, args, order := c.build()
