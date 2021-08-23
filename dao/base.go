@@ -81,5 +81,6 @@ func GetFieldMap(db *gorm.DB, field string, cause criteria.Cause, target interfa
 }
 
 func Sum(db *gorm.DB, field string, cause criteria.Cause, target interface{}) (err error) {
-	return db.Scopes(cause.(scope).Query()).Pluck("COALESCE(SUM("+field+"), 0) as amount", target).Error
+	return db.Scopes(cause.(scope).Query()).Select("COALESCE(SUM(" + field + "), 0)").Scan(target).Error
+	//return db.Scopes(cause.(scope).Query()).Pluck("COALESCE(SUM("+field+"), 0) as amount", target).Error
 }
