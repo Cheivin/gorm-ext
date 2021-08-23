@@ -24,6 +24,14 @@ type (
 		Like(field string, val interface{}) Cause
 		EqIf(test bool, field string, val interface{}) Cause
 		Eq(field string, val interface{}) Cause
+		GtIf(test bool, field string, val interface{}) Cause
+		Gt(field string, val interface{}) Cause
+		GteIf(test bool, field string, val interface{}) Cause
+		Gte(field string, val interface{}) Cause
+		LtIf(test bool, field string, val interface{}) Cause
+		Lt(field string, val interface{}) Cause
+		LteIf(test bool, field string, val interface{}) Cause
+		Lte(field string, val interface{}) Cause
 		In(field string, val interface{}) Cause
 		And(causes ...Cause) Cause
 		Or(cause Cause) Cause
@@ -72,6 +80,50 @@ func (c *cause) EqIf(test bool, field string, val interface{}) Cause {
 
 func (c *cause) Eq(field string, val interface{}) Cause {
 	return c.Expr(field+" = ?", val)
+}
+
+func (c *cause) GtIf(test bool, field string, val interface{}) Cause {
+	if test {
+		return c.Gt(field, val)
+	}
+	return c
+}
+
+func (c *cause) Gt(field string, val interface{}) Cause {
+	return c.Expr(field+" > ?", val)
+}
+
+func (c *cause) GteIf(test bool, field string, val interface{}) Cause {
+	if test {
+		return c.Gte(field, val)
+	}
+	return c
+}
+
+func (c *cause) Gte(field string, val interface{}) Cause {
+	return c.Expr(field+" >= ?", val)
+}
+
+func (c *cause) LtIf(test bool, field string, val interface{}) Cause {
+	if test {
+		return c.Lt(field, val)
+	}
+	return c
+}
+
+func (c *cause) Lt(field string, val interface{}) Cause {
+	return c.Expr(field+" < ?", val)
+}
+
+func (c *cause) LteIf(test bool, field string, val interface{}) Cause {
+	if test {
+		return c.Lte(field, val)
+	}
+	return c
+}
+
+func (c *cause) Lte(field string, val interface{}) Cause {
+	return c.Expr(field+" <= ?", val)
 }
 
 func (c *cause) In(field string, val interface{}) Cause {
@@ -186,6 +238,38 @@ func EqIf(test bool, field string, val interface{}) Cause {
 
 func Eq(field string, val interface{}) Cause {
 	return new(cause).Eq(field, val)
+}
+
+func GtIf(test bool, field string, val interface{}) Cause {
+	return new(cause).GtIf(test, field, val)
+}
+
+func Gt(field string, val interface{}) Cause {
+	return new(cause).Gt(field, val)
+}
+
+func GteIf(test bool, field string, val interface{}) Cause {
+	return new(cause).GteIf(test, field, val)
+}
+
+func Gte(field string, val interface{}) Cause {
+	return new(cause).Gte(field, val)
+}
+
+func LtIf(test bool, field string, val interface{}) Cause {
+	return new(cause).LtIf(test, field, val)
+}
+
+func Lt(field string, val interface{}) Cause {
+	return new(cause).Lt(field, val)
+}
+
+func LteIf(test bool, field string, val interface{}) Cause {
+	return new(cause).LteIf(test, field, val)
+}
+
+func Lte(field string, val interface{}) Cause {
+	return new(cause).Lte(field, val)
 }
 
 func In(field string, val interface{}) Cause {
