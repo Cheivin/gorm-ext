@@ -138,6 +138,10 @@ func (c *cause) In(field string, val ...interface{}) Cause {
 			return c
 		} else if s.Len() == 1 {
 			v := s.Index(0)
+			switch v.Kind() {
+			case reflect.Array, reflect.Slice:
+				return c.Expr(field+" in ?", val)
+			}
 			return c.Eq(field, v.Interface())
 		}
 	}
