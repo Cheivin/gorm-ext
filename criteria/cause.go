@@ -34,6 +34,8 @@ type (
 		Lte(field string, val interface{}) Cause
 		In(field string, val ...interface{}) Cause
 		InIf(test bool, field string, val ...interface{}) Cause
+		InSql(field string, sql string, val ...interface{}) Cause
+		InSqlIf(test bool, field string, sql string, val ...interface{}) Cause
 		And(causes ...Cause) Cause
 		Or(cause Cause) Cause
 		Asc(fields ...string) Cause
@@ -138,9 +140,14 @@ func (c *cause) In(field string, val ...interface{}) Cause {
 			return c
 		} else if s.Len() == 1 {
 			v := s.Index(0)
-			switch v.Kind() {
+			switch v.Elem().Kind() {
 			case reflect.Array, reflect.Slice:
-				return c.Expr(field+" in ?", val)
+				if v.Elem().Len() == 0 {
+					return c
+				} else if v.Elem().Len() == 1 {
+					return c.Eq(field, v.Elem().Index(0).Interface())
+				}
+				return c.Expr(field+" in ?", v.Interface())
 			}
 			return c.Eq(field, v.Interface())
 		}
@@ -151,6 +158,17 @@ func (c *cause) In(field string, val ...interface{}) Cause {
 func (c *cause) InIf(test bool, field string, val ...interface{}) Cause {
 	if test {
 		return c.In(field, val...)
+	}
+	return c
+}
+
+func (c *cause) InSql(field string, sql string, val ...interface{}) Cause {
+	return c.Expr(field+" in ("+sql+")", val...)
+}
+
+func (c *cause) InSqlIf(test bool, field string, sql string, val ...interface{}) Cause {
+	if test {
+		return c.InSql(field, sql, val...)
 	}
 	return c
 }
