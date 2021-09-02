@@ -141,7 +141,7 @@ func (c *cause) In(field string, val ...interface{}) Cause {
 			return c.Eq(field, v.Interface())
 		}
 	}
-	return c.Expr(field+" in ?", val...)
+	return c.Expr(field+" in ?", val)
 }
 
 func (c *cause) InIf(test bool, field string, val ...interface{}) Cause {
