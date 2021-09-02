@@ -18,8 +18,8 @@ type (
 	}
 
 	Cause interface {
-		ExprIf(test bool, field string, val interface{}) Cause
-		Expr(field string, val interface{}) Cause
+		ExprIf(test bool, field string, val ...interface{}) Cause
+		Expr(field string, val ...interface{}) Cause
 		LikeIf(test bool, field string, val interface{}) Cause
 		Like(field string, val interface{}) Cause
 		EqIf(test bool, field string, val interface{}) Cause
@@ -32,7 +32,8 @@ type (
 		Lt(field string, val interface{}) Cause
 		LteIf(test bool, field string, val interface{}) Cause
 		Lte(field string, val interface{}) Cause
-		In(field string, val interface{}) Cause
+		In(field string, val ...interface{}) Cause
+		InIf(test bool, field string, val ...interface{}) Cause
 		And(causes ...Cause) Cause
 		Or(cause Cause) Cause
 		Asc(fields ...string) Cause
@@ -47,16 +48,16 @@ func New() Cause {
 	return new(cause)
 }
 
-func (c *cause) ExprIf(test bool, field string, val interface{}) Cause {
+func (c *cause) ExprIf(test bool, field string, val ...interface{}) Cause {
 	if test {
-		return c.Expr(field, val)
+		return c.Expr(field, val...)
 	}
 	return c
 }
 
-func (c *cause) Expr(field string, val interface{}) Cause {
+func (c *cause) Expr(field string, val ...interface{}) Cause {
 	c.fragments = append(c.fragments, fragment{and: true, query: field})
-	c.args = append(c.args, val)
+	c.args = append(c.args, val...)
 	return c
 }
 
@@ -126,7 +127,7 @@ func (c *cause) Lte(field string, val interface{}) Cause {
 	return c.Expr(field+" <= ?", val)
 }
 
-func (c *cause) In(field string, val interface{}) Cause {
+func (c *cause) In(field string, val ...interface{}) Cause {
 	if val == nil {
 		return c
 	}
@@ -140,7 +141,14 @@ func (c *cause) In(field string, val interface{}) Cause {
 			return c.Eq(field, v.Interface())
 		}
 	}
-	return c.Expr(field+" in ?", val)
+	return c.Expr(field+" in ?", val...)
+}
+
+func (c *cause) InIf(test bool, field string, val ...interface{}) Cause {
+	if test {
+		return c.In(field, val...)
+	}
+	return c
 }
 
 func (c *cause) And(causes ...Cause) Cause {
@@ -216,12 +224,12 @@ func (c *cause) build() (string, []interface{}, string) {
 	return b.String(), c.args, orderStr
 }
 
-func ExprIf(test bool, field string, val interface{}) Cause {
-	return new(cause).ExprIf(test, field, val)
+func ExprIf(test bool, field string, val ...interface{}) Cause {
+	return new(cause).ExprIf(test, field, val...)
 }
 
-func Expr(field string, val interface{}) Cause {
-	return new(cause).Expr(field, val)
+func Expr(field string, val ...interface{}) Cause {
+	return new(cause).Expr(field, val...)
 }
 
 func LikeIf(test bool, field string, val interface{}) Cause {
@@ -272,8 +280,12 @@ func Lte(field string, val interface{}) Cause {
 	return new(cause).Lte(field, val)
 }
 
-func In(field string, val interface{}) Cause {
-	return new(cause).In(field, val)
+func In(field string, val ...interface{}) Cause {
+	return new(cause).In(field, val...)
+}
+
+func InIf(test bool, field string, val ...interface{}) Cause {
+	return new(cause).InIf(test, field, val...)
 }
 
 func And(causes ...Cause) Cause {
