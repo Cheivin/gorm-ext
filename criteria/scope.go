@@ -5,6 +5,9 @@ import "gorm.io/gorm"
 func (c *cause) query() func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		query, args, _ := c.build()
+		if query == "" {
+			return db
+		}
 		return db.Where(query, args...)
 	}
 }
