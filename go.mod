@@ -1,8 +1,7 @@
 module github.com/cheivin/gorm-ext
 
-go 1.16
+go 1.18
 
 require (
-	gorm.io/driver/mysql v1.1.1
-	gorm.io/gorm v1.21.12
+	gorm.io/gorm v1.23.3
 )
