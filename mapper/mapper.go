@@ -108,7 +108,7 @@ func Delete[T any](db *gorm.DB, cause *wrapper.Query) (int64, error) {
 }
 
 func Exist(db *gorm.DB, cause *wrapper.Query) (exist bool, err error) {
-	err = Where(db.Select("1"), cause).Find(&exist).Error
+	err = Where(db.Select("1"), cause).Limit(1).Scan(&exist).Error
 	return
 }
 

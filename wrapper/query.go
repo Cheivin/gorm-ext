@@ -1,17 +1,18 @@
 package wrapper
 
 import (
+	"reflect"
+	"strings"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/utils"
-	"reflect"
-	"strings"
 )
 
 type (
 	Query struct {
 		fragments []fragment
-		args      []interface{}
+		args      []any
 		order     []string
 		group     []string
 	}
@@ -26,90 +27,90 @@ func Q() *Query {
 	return new(Query)
 }
 
-func (q *Query) expr(field string, val ...interface{}) *Query {
+func (q *Query) expr(field string, val ...any) *Query {
 	q.fragments = append(q.fragments, fragment{and: true, query: field})
 	q.args = append(q.args, val...)
 	return q
 }
 
-func (q *Query) ExprIf(test bool, field string, val ...interface{}) *Query {
+func (q *Query) ExprIf(test bool, field string, val ...any) *Query {
 	if test {
 		return q.Expr(field, val...)
 	}
 	return q
 }
 
-func (q *Query) Expr(field string, val ...interface{}) *Query {
+func (q *Query) Expr(field string, val ...any) *Query {
 	return q.expr(field, val...)
 }
 
-func (q *Query) LikeIf(test bool, field string, val interface{}) *Query {
+func (q *Query) LikeIf(test bool, field string, val any) *Query {
 	if test {
 		return q.Like(field, val)
 	}
 	return q
 }
 
-func (q *Query) Like(field string, val interface{}) *Query {
+func (q *Query) Like(field string, val any) *Query {
 	return q.Expr(field+" like ?", val)
 }
 
-func (q *Query) EqIf(test bool, field string, val interface{}) *Query {
+func (q *Query) EqIf(test bool, field string, val any) *Query {
 	if test {
 		return q.Eq(field, val)
 	}
 	return q
 }
 
-func (q *Query) Eq(field string, val interface{}) *Query {
+func (q *Query) Eq(field string, val any) *Query {
 	return q.Expr(field+" = ?", val)
 }
 
-func (q *Query) GtIf(test bool, field string, val interface{}) *Query {
+func (q *Query) GtIf(test bool, field string, val any) *Query {
 	if test {
 		return q.Gt(field, val)
 	}
 	return q
 }
 
-func (q *Query) Gt(field string, val interface{}) *Query {
+func (q *Query) Gt(field string, val any) *Query {
 	return q.Expr(field+" > ?", val)
 }
 
-func (q *Query) GteIf(test bool, field string, val interface{}) *Query {
+func (q *Query) GteIf(test bool, field string, val any) *Query {
 	if test {
 		return q.Gte(field, val)
 	}
 	return q
 }
 
-func (q *Query) Gte(field string, val interface{}) *Query {
+func (q *Query) Gte(field string, val any) *Query {
 	return q.Expr(field+" >= ?", val)
 }
 
-func (q *Query) LtIf(test bool, field string, val interface{}) *Query {
+func (q *Query) LtIf(test bool, field string, val any) *Query {
 	if test {
 		return q.Lt(field, val)
 	}
 	return q
 }
 
-func (q *Query) Lt(field string, val interface{}) *Query {
+func (q *Query) Lt(field string, val any) *Query {
 	return q.Expr(field+" < ?", val)
 }
 
-func (q *Query) LteIf(test bool, field string, val interface{}) *Query {
+func (q *Query) LteIf(test bool, field string, val any) *Query {
 	if test {
 		return q.Lte(field, val)
 	}
 	return q
 }
 
-func (q *Query) Lte(field string, val interface{}) *Query {
+func (q *Query) Lte(field string, val any) *Query {
 	return q.Expr(field+" <= ?", val)
 }
 
-func (q *Query) In(field string, val ...interface{}) *Query {
+func (q *Query) In(field string, val ...any) *Query {
 	if val == nil {
 		return q
 	}
@@ -135,18 +136,18 @@ func (q *Query) In(field string, val ...interface{}) *Query {
 	return q.Expr(field+" in ?", val)
 }
 
-func (q *Query) InIf(test bool, field string, val ...interface{}) *Query {
+func (q *Query) InIf(test bool, field string, val ...any) *Query {
 	if test {
 		return q.In(field, val...)
 	}
 	return q
 }
 
-func (q *Query) InSql(field string, sql string, val ...interface{}) *Query {
+func (q *Query) InSql(field string, sql string, val ...any) *Query {
 	return q.expr(field+" in ("+sql+")", val...)
 }
 
-func (q *Query) InSqlIf(test bool, field string, sql string, val ...interface{}) *Query {
+func (q *Query) InSqlIf(test bool, field string, sql string, val ...any) *Query {
 	if test {
 		return q.InSql(field, sql, val...)
 	}
@@ -160,9 +161,9 @@ func (q *Query) And(causes ...*Query) *Query {
 	for _, cause := range causes {
 		fragments := cause.Build()
 		fragmentCause := fragments[0].(string)
-		args := fragments[1].([]interface{})
+		args := fragments[1].([]any)
 		if fragmentCause == "" {
-			return q
+			continue
 		}
 		q.fragments = append(q.fragments, fragment{and: true, query: "( " + fragmentCause + " )"})
 		q.args = append(q.args, args...)
@@ -173,7 +174,7 @@ func (q *Query) And(causes ...*Query) *Query {
 func (q *Query) Or(cause *Query) *Query {
 	fragments := cause.Build()
 	fragmentCause := fragments[0].(string)
-	args := fragments[1].([]interface{})
+	args := fragments[1].([]any)
 	if fragmentCause == "" {
 		return q
 	}
@@ -199,16 +200,16 @@ func (q *Query) GroupBy(fields ...string) *Query {
 	return q
 }
 
-func (q *Query) Build() []interface{} {
+func (q *Query) Build() []any {
 	sqlFragment, args, groupBy, orderBy := q.build()
-	return []interface{}{sqlFragment, args, groupBy, orderBy}
+	return []any{sqlFragment, args, groupBy, orderBy}
 }
 
 func (q *Query) ForUpdate() *Update {
 	return U(q)
 }
 
-func (q *Query) build() (string, []interface{}, []string, string) {
+func (q *Query) build() (string, []any, []string, string) {
 	orderStr := strings.Join(q.order, ", ")
 	elems := q.fragments
 	andSep := " and "
@@ -249,7 +250,7 @@ func (q *Query) Scope(db *gorm.DB) *gorm.DB {
 		return db
 	}
 	fragments := q.Build()
-	query, args, groupBys, orderBy := fragments[0].(string), fragments[1].([]interface{}), fragments[2].([]string), fragments[3].(string)
+	query, args, groupBys, orderBy := fragments[0].(string), fragments[1].([]any), fragments[2].([]string), fragments[3].(string)
 	if query != "" {
 		db = db.Where(query, args...)
 	}
@@ -257,7 +258,7 @@ func (q *Query) Scope(db *gorm.DB) *gorm.DB {
 		groupBy := clause.GroupBy{Columns: make([]clause.Column, len(groupBys))}
 		for i := range groupBys {
 			group := groupBys[i]
-			fields := strings.FieldsFunc(group, utils.IsValidDBNameChar)
+			fields := strings.FieldsFunc(group, utils.IsInvalidDBNameChar)
 			groupBy.Columns[i] = clause.Column{Name: group, Raw: len(fields) != 1}
 		}
 		db.Statement.AddClause(groupBy)
